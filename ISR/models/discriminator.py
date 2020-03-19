@@ -1,7 +1,8 @@
-from tensorflow.keras.layers import concatenate, Flatten, Input, Activation, Dense, Conv2D, BatchNormalization
-from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import Input, Activation, Dense, Conv2D, BatchNormalization, \
+    LeakyReLU
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
+
 
 class Discriminator:
     """
@@ -15,13 +16,13 @@ class Discriminator:
     Attributes:
         model: Keras model.
         name: name used to identify what discriminator is used during GANs training.
-        model.name: identifies this network as the discriminator network
+        model._name: identifies this network as the discriminator network
             in the compound model built by the trainer class.
         block_param: dictionary, determines the number of filters and the strides for each
             conv block.
 
     """
-
+    
     def __init__(self, patch_size, kernel_size=3):
         self.patch_size = patch_size
         self.kernel_size = kernel_size
@@ -32,12 +33,12 @@ class Discriminator:
         self.model = self._build_disciminator()
         optimizer = Adam(0.0002, 0.5)
         self.model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-        self.model.name = 'discriminator'
+        self.model._name = 'discriminator'
         self.name = 'srgan-large'
-
+    
     def _conv_block(self, input, filters, strides, batch_norm=True, count=None):
         """ Convolutional layer + Leaky ReLU + conditional BN. """
-
+        
         x = Conv2D(
             filters,
             kernel_size=self.kernel_size,
@@ -49,10 +50,10 @@ class Discriminator:
         if batch_norm:
             x = BatchNormalization(momentum=0.8)(x)
         return x
-
+    
     def _build_disciminator(self):
         """ Puts the discriminator's layers together. """
-
+        
         HR = Input(shape=(self.patch_size, self.patch_size, 3))
         x = self._conv_block(HR, filters=64, strides=1, batch_norm=False, count=1)
         for i in range(self.block_num):
@@ -67,6 +68,6 @@ class Discriminator:
         # x = Flatten()(x)
         x = Dense(1, name='Dense_last')(x)
         HR_v_SR = Activation('sigmoid')(x)
-
+        
         discriminator = Model(inputs=HR, outputs=HR_v_SR)
         return discriminator
